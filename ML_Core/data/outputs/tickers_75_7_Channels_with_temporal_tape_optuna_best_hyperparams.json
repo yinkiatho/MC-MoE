@@ -1,0 +1,18 @@
+{
+  "learning_rate": 0.00042175180680300894,
+  "weight_decay": 0.019529775672752218,
+  "adam_beta1": 0.9037050239740964,
+  "adam_beta2": 0.9675889344224324,
+  "num_train_epochs": 2,
+  "warmup_steps": 21,
+  "per_device_train_batch_size": 16,
+  "lr_scheduler_type": "cosine",
+  "optim": "adamw_torch_fused",
+  "model_hidden_size": 288,
+  "model_num_hidden_layers": 12,
+  "model_num_attention_heads": 12,
+  "model_num_experts": 8,
+  "model_hidden_dropout": 0.17313589950069397,
+  "model_attention_dropout": 0.19461903552392804,
+  "model_hidden_act": "gelu"
+}

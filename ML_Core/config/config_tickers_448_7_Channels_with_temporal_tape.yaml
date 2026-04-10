@@ -1,0 +1,171 @@
+regression:
+  common:
+    version_name: 'tickers_448_7_Channels_with_temporal_tape'
+    unique_keys: ['Ticker', 'Date']
+
+  S1:
+    processed_data_file_path: '../data/processed_data/processed_data_{version_name}.parquet'
+    save_file: True
+    ticker_list: '../data/raw_data/tickers_448_v2.txt'
+    #ticker_list: '../data/raw_data/tickers_test_top_116.txt'
+    price_data: '../data/raw_data/daily_ohlc_data.parquet'
+
+    tickers_to_exclude: ['MTRJF', 'PBMRF', 'BLBRF', 'ACPIF', 'PIKQF', 'UBEOF', 'AITUF', 
+                        'AVIJF', 'MNTHF', 'SBSNF', 'TSUSF', 'JPTXF', 'AYAAF', 'AKBLF', 
+                        'PORBF', 'COLZF', 'YTLCF', 'OLCLF', 'HUFAF', 'GZPHF', 'NPSCGF',
+                        'SNYYF', 'PTAIF', 'CHFFF', 'MAANF', 'PHJMF']
+    
+    alternative_data: 
+      #congress_trading_disclosures: '../data/raw_data/congressional_trading_disclosure.parquet'
+      earnings_quality_scores: '../data/raw_data/earnings_quality_score.parquet'
+      earnings_surprises: '../data/raw_data/earnings_surprises.parquet'
+      #employee_count_history: '../data/raw_data/employee_count_history.parquet'
+      bs_quarterly: '../data/raw_data/financials_bs_quarterly_all_tickers.parquet'
+      cf_quarterly: '../data/raw_data/financials_cf_quarterly_all_tickers.parquet'
+      ic_quarterly: '../data/raw_data/financials_ic_quarterly_all_tickers.parquet'
+      esg_scores: '../data/raw_data/historical_esg_scores.parquet'
+      insider_sentiment: '../data/raw_data/insider_sentiment.parquet'
+      insider_transactions: '../data/raw_data/insider_transactions.parquet'
+      #market_cap: '../data/raw_data/market_cap_history.parquet'
+      social_sentiment: '../data/raw_data/social_sentiment.parquet'
+      usa_spending_history: '../data/raw_data/usa_spending_history.parquet'
+
+    start_date: '2014-08-08'
+    end_date: '2025-09-15'
+
+  S2: 
+    feature_engineered_file_path: '../data/processed_data/feature_engineered_data_{version_name}.parquet'
+    save_file: True
+    target_label: 'next_open'
+    original_label: 'Open'
+    transform_cols: []
+    transform_method: []
+    lambda_fixed: []
+
+
+
+  S3:  
+    train_start_date: '2010-01-01'
+    train_end_date: '2020-01-01'
+    test_start_date: '2020-01-02'
+    test_end_date: '2024-01-01'
+    inference_start_date: '2024-01-01'
+    inference_end_date: '2025-01-01'
+    window_size: 63
+    ticker_size: 1
+    output_file_path: '../data/outputs/{version_name}_inference_output.parquet'
+    output_seq_path: '../data/outputs/{version_name}_all_inference_sequences.pkl'
+    save_output: True
+    save_sequences: True
+
+    channel_configs: [[63, 1, 1], [6, 1, 4], [6, 1, 5], [10, 1, 1], [5, 1, 1], [5, 1, 1], [5, 1, 2]]   # Length Sequence, Stride, Num features
+    channel_columns: [['Close'], # Channel 1
+                      ['dupont_net_margin','dupont_asset_turnover', 'dupont_equity_multiplier', 'dupont_roe'], # Channel 2 
+                      ['cashGenerationCapitalAllocation', 'growth', 'leverage', 'profitability', 'score'], # Channel 3
+                      #['surprise_percent_quarterly'], # Channel 4
+                      ["social_sentiment_score"],  # Channel 5
+                      ['change_vol'], # Channel 6
+                      ['totalValue'], # Channel 7
+                      ['prev_monthly_share_purchase_ratio', 'net_change_insider_transactions'] # Channel 8
+                      ] 
+
+
+    resample: False 
+    bucket_mapping_jsons:
+      volatility:
+        weights: {'0': 0.1, '1': 0.5, '2': 1.5, '3': 1.4, '4': 1.5}
+        buckets: '../data/processed_data/ticker_volatility_buckets_{version_name}.json'
+
+    tensorboard_diagram: '../data/outputs/{version_name}_tensorboard.png'
+
+  S4:
+    subset_classes: ['Ticker']
+    plot_graphs: True
+  
+
+  Time_MOE:
+    model_path: "kiatkock/MV-Time-MOE"
+    output_path: "../logs/time_moe_{version_name}"
+    train_seed: 3003
+
+    optuna_grid:
+      save_best_hyperparams: True
+      best_hyperparams_path: "../data/outputs/{version_name}_optuna_best_hyperparams.json"
+      n_trials: 20
+      training_grid:
+        float:
+          learning_rate: [0.0001, 0.001]
+          weight_decay: [0.0, 0.1]
+        int: 
+          num_train_epochs: [2, 3]
+          warmup_steps: [0, 1000]
+        categorical:
+          per_device_train_batch_size: [8, 16, 32]
+    
+    train_model_args:
+      channel_configs: [[63, 1, 1], [6, 1, 4], [6, 1, 5], [10, 1, 1], [5, 1, 1], [5, 1, 1], [5, 1, 2]]
+      input_size: 42
+      embedding_hidden_size: 128
+      load_prepared: True  # For building the tensors 
+      save_prepared: False # For building the tensors 
+      prepared_save_path: "../data/processed_data/{version_name}" # For building the tensors 
+      input_dim: 42
+      prediction_length: 8
+      from_scratch: True
+      max_length: 63
+      stride: 1
+      #data_path: "../data/processed_data/{version_name}_stage_sequences.pkl"
+      normalization_method: "zero"
+      attn_implementation: "auto"
+      micro_batch_size: 16
+      global_batch_size: 128
+      train_steps: null
+      num_train_epochs: 2.0
+      #precision: "fp16"
+      precision: 'fp32'
+      
+      #torch_compile: False 
+      torch_compile: True
+      evaluation_strategy: "steps"
+      eval_steps: 500
+      save_strategy: "steps"
+      save_steps: 500
+      learning_rate: 0.0001
+      min_learning_rate: 0.00005
+      adam_beta1: 0.9
+      adam_beta2: 0.95
+      adam_epsilon: 1e-8
+      lr_scheduler_type: "cosine"
+      warmup_ratio: 0.0
+      warmup_steps: 0
+      weight_decay: 0.1
+      gradient_checkpointing: False
+      deepspeed: null
+      logging_steps: 50
+      max_grad_norm: 1.0
+
+      optim: "adamw_torch_fused"
+      dataloader_num_workers: 4 # for gpu
+      #dataloader_num_workers: 0
+      save_only_model: False
+      save_safetensors: True
+      save_total_limit: 1
+      push_to_hub: False
+      # hub_token: loaded from HF_TOKEN environment variable
+      report_to: "tensorboard"
+
+      # Earlystopping
+      metric_for_best_model: "loss"
+      load_best_model_at_end: True
+      early_stopping_patience: 3
+      early_stopping_threshold: 0.0
+
+      # resume_from_checkpoint: "../logs/time_moe_{version_name}/checkpoint-3500"
+
+    inference_model_args: 
+      data_path: "../data/processed_data/{version_name}_stage_sequences.pkl"
+      prediction_length: 8
+      batch_size: 8
+      load_prepared: False  # For building the tensors 
+      save_prepared: True # For building the tensors 
+      prepared_save_path: "../data/processed_data/{version_name}" # For building the tensors 

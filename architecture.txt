@@ -1,0 +1,104 @@
+TimeMoeForPrediction(
+  (model): TimeMoeModel(
+    (embed_layer): MultiFreqInputEmbedding(
+      (main_lstm): LSTM(1, 384, batch_first=True, dropout=0.1)
+      (main_ln): LayerNorm((384,), eps=1e-05, elementwise_affine=True)
+      (channel_lstms): ModuleList(
+        (0): TimeEncodedLSTM(
+          (input_proj): Linear(in_features=4, out_features=384, bias=True)
+          (tape): TemporalAwaretAPE(
+            (dropout): Dropout(p=0.1, inplace=False)
+          )
+          (lstm): LSTM(384, 384, num_layers=2, batch_first=True, dropout=0.1)
+        )
+        (1): TimeEncodedLSTM(
+          (input_proj): Linear(in_features=5, out_features=384, bias=True)
+          (tape): TemporalAwaretAPE(
+            (dropout): Dropout(p=0.1, inplace=False)
+          )
+          (lstm): LSTM(384, 384, num_layers=2, batch_first=True, dropout=0.1)
+        )
+        (2-4): 3 x TimeEncodedLSTM(
+          (input_proj): Linear(in_features=1, out_features=384, bias=True)
+          (tape): TemporalAwaretAPE(
+            (dropout): Dropout(p=0.1, inplace=False)
+          )
+          (lstm): LSTM(384, 384, num_layers=2, batch_first=True, dropout=0.1)
+        )
+        (5): TimeEncodedLSTM(
+          (input_proj): Linear(in_features=2, out_features=384, bias=True)
+          (tape): TemporalAwaretAPE(
+            (dropout): Dropout(p=0.1, inplace=False)
+          )
+          (lstm): LSTM(384, 384, num_layers=2, batch_first=True, dropout=0.1)
+        )
+      )
+      (channel_lns): ModuleList(
+        (0-5): 6 x LayerNorm((384,), eps=1e-05, elementwise_affine=True)
+      )
+      (query_proj): Linear(in_features=384, out_features=384, bias=True)
+      (key_proj): ModuleList(
+        (0-5): 6 x Linear(in_features=384, out_features=384, bias=True)
+      )
+      (value_proj): ModuleList(
+        (0-5): 6 x Linear(in_features=384, out_features=384, bias=True)
+      )
+      (attn): MultiheadAttention(
+        (out_proj): NonDynamicallyQuantizableLinear(in_features=384, out_features=384, bias=True)
+      )
+      (output_proj): Linear(in_features=384, out_features=384, bias=True)
+      (act_fn): GELU(approximate='none')
+      (dropout): Dropout(p=0.3, inplace=False)
+      (output_ln): LayerNorm((384,), eps=1e-05, elementwise_affine=True)
+    )
+    (layers): ModuleList(
+      (0-11): 12 x TimeMoeDecoderLayer(
+        (self_attn): TimeMoeAttention(
+          (q_proj): Linear(in_features=384, out_features=384, bias=True)
+          (k_proj): Linear(in_features=384, out_features=384, bias=True)
+          (v_proj): Linear(in_features=384, out_features=384, bias=True)
+          (o_proj): Linear(in_features=384, out_features=384, bias=False)
+          (rotary_emb): TimeMoeRotaryEmbedding()
+        )
+        (ffn_layer): TimeMoeSparseExpertsLayer(
+          (gate): Linear(in_features=384, out_features=8, bias=False)
+          (experts): ModuleList(
+            (0-7): 8 x TimeMoeTemporalBlock(
+              (gate_proj): Linear(in_features=384, out_features=768, bias=False)
+              (up_proj): Linear(in_features=384, out_features=768, bias=False)
+              (down_proj): Linear(in_features=768, out_features=384, bias=False)
+              (act_fn): SiLU()
+            )
+          )
+          (shared_expert): TimeMoeTemporalBlock(
+            (gate_proj): Linear(in_features=384, out_features=1536, bias=False)
+            (up_proj): Linear(in_features=384, out_features=1536, bias=False)
+            (down_proj): Linear(in_features=1536, out_features=384, bias=False)
+            (act_fn): SiLU()
+          )
+          (shared_expert_gate): Linear(in_features=384, out_features=1, bias=False)
+        )
+        (input_layernorm): TimeMoeRMSNorm()
+        (post_attention_layernorm): TimeMoeRMSNorm()
+      )
+    )
+    (norm): TimeMoeRMSNorm()
+  )
+  (lm_heads): ModuleList(
+    (0): TimeMoeOutputLayerSingular(
+      (out_layer): Linear(in_features=384, out_features=1, bias=False)
+    )
+    (1): TimeMoeOutputLayerSingular(
+      (out_layer): Linear(in_features=384, out_features=8, bias=False)
+    )
+    (2): TimeMoeOutputLayerSingular(
+      (out_layer): Linear(in_features=384, out_features=32, bias=False)
+    )
+    (3): TimeMoeOutputLayerSingular(
+      (out_layer): Linear(in_features=384, out_features=64, bias=False)
+    )
+  )
+  (loss_function): HuberLoss()
+)
+
+

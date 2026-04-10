@@ -1,0 +1,6 @@
+# csv/*
+# pbo/test_pbo/*
+# png/*
+
+!csv/init.txt
+!png/init.txt
